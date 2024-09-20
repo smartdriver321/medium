@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { imageUpload } from '@/actions/cloudinary'
 
-export function ImageComp({
+export default function ImageComp({
 	imageUrl,
 	file,
 	handleSave,

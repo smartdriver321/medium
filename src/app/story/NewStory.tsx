@@ -9,7 +9,8 @@ import 'medium-editor/dist/css/medium-editor.css'
 import 'medium-editor/dist/css/themes/default.css'
 
 import './new_story.css'
-import { ImageComp } from './ImageComp'
+import ImageComp from './ImageComp'
+import Divider from './Divider'
 
 type Props = {
 	storyId: string
@@ -48,6 +49,27 @@ export default function NewStory({ storyId, storyContent }: Props) {
 		return { x, y }
 	}
 
+	const handleFileInputChange = (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = event.target.files?.[0]
+
+		if (file) {
+			setOpenTools(false)
+
+			const localImageUrl = URL.createObjectURL(file)
+			const ImageComponent = (
+				<ImageComp imageUrl={localImageUrl} file={file} handleSave={() => {}} />
+			)
+
+			const wrapperDiv = document.createElement('div')
+			const root = createRoot(wrapperDiv)
+			root.render(ImageComponent)
+
+			contentEditabeRef.current?.appendChild(wrapperDiv)
+		}
+	}
+
 	const handleSave = async () => {
 		const content = contentEditabeRef.current?.innerHTML
 		setSaving(true)
@@ -68,25 +90,17 @@ export default function NewStory({ storyId, storyContent }: Props) {
 		fileInputRef.current?.click()
 	}
 
-	const handleFileInputChange = (
-		event: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const file = event.target.files?.[0]
+	const insertDivider = () => {
+		const DividerComp = <Divider />
 
-		if (file) {
-			setOpenTools(false)
+		setOpenTools(false)
 
-			const localImageUrl = URL.createObjectURL(file)
-			const ImageComponent = (
-				<ImageComp imageUrl={localImageUrl} file={file} handleSave={() => {}} />
-			)
+		const wrapperDiv = document.createElement('div')
+		const root = createRoot(wrapperDiv)
 
-			const wrapperDiv = document.createElement('div')
-			const root = createRoot(wrapperDiv)
-			root.render(ImageComponent)
-
-			contentEditabeRef.current?.appendChild(wrapperDiv)
-		}
+		root.render(DividerComp)
+		contentEditabeRef.current?.appendChild(wrapperDiv)
+		handleSave()
 	}
 
 	useEffect(() => {
@@ -183,6 +197,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 						className={`border-[1.5px] border-green-500 rounded-full block p-[6px] ${
 							openTools ? 'scale-100 visible' : 'scale-0 invisible'
 						} ease-linear duration-100 delay-75 bg-white cursor-pointer`}
+						onClick={insertDivider}
 					>
 						<MoreHorizontal size={20} className='opacity-60 text-green-800 ' />
 					</span>

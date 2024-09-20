@@ -53,8 +53,8 @@ export default function NavbarStory({
 				</div>
 				<div className='flex items-center space-x-7'>
 					<button
-						onClick={() => setShowPopup(!showPopup)}
 						className='flex items-center opacity-90 hover:opacity-100 duration-100 ease-in cursor-pointer bg-green-600 hover:bg-green-700 rounded-full px-3 py-1 text-[13px] text-white'
+						onClick={() => setShowPopup(!showPopup)}
 					>
 						Publish
 					</button>

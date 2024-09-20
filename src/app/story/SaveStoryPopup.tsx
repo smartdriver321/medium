@@ -22,7 +22,7 @@ export default function SaveStoryPopUp({
 	currentUserLastName,
 }: SaveStoryPopUpTypes) {
 	const [story, setStory] = useState<Story>()
-	const [selectedtopics, setSelectedTopics] = useState<string[]>([])
+	const [selectedTopics, setSelectedTopics] = useState<string[]>([])
 
 	useEffect(() => {
 		const fetchStoryById = async () => {
@@ -143,15 +143,15 @@ export default function SaveStoryPopUp({
 
 							setSelectedTopics(stringValues)
 						}}
-						isOptionDisabled={() => selectedtopics?.length >= 5}
 						name='topics'
 						options={topics}
 						className='basic-multi-select'
 						classNamePrefix='Add a topic ...'
+						isOptionDisabled={() => selectedTopics?.length >= 5}
 					/>
 					<button
-						onClick={() => publishStory(selectedtopics)}
 						className='px-4 py-2 bg-green-600 hover:bg-green-700 rounded-full text-white text-sm mt-8'
+						onClick={() => publishStory(selectedTopics)}
 					>
 						Publish now
 					</button>

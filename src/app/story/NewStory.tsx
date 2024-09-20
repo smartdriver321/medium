@@ -3,12 +3,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Code, Image, MoreHorizontal, Plus } from 'lucide-react'
+import { Story } from '@prisma/client'
 import axios from 'axios'
 import MediumEditor from 'medium-editor'
 import 'medium-editor/dist/css/medium-editor.css'
 import 'medium-editor/dist/css/themes/default.css'
 
 import './new_story.css'
+import { getStoryById } from '@/actions/getStories'
 import ImageComp from './ImageComp'
 import Divider from './Divider'
 import CodeBlock from './CodeBlock'
@@ -21,6 +23,8 @@ type Props = {
 export default function NewStory({ storyId, storyContent }: Props) {
 	const [openTools, setOpenTools] = useState<boolean>(false)
 	const [saving, setSaving] = useState<boolean>(false)
+	const [story, setStory] = useState<Story>()
+	const [loading, setLoading] = useState<boolean>(false)
 	const [buttonPosition, setButtonPosition] = useState<{
 		top: number
 		left: number
@@ -28,6 +32,26 @@ export default function NewStory({ storyId, storyContent }: Props) {
 
 	const contentEditabeRef = useRef<HTMLDivElement | null>(null)
 	const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+	function debounce<T extends (...args: any[]) => any>(
+		func: T,
+		delay: number
+	): (...args: Parameters<T>) => void {
+		let timeoutId: ReturnType<typeof setTimeout>
+
+		return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
+			clearTimeout(timeoutId)
+			timeoutId = setTimeout(() => {
+				func.apply(this, args)
+			}, delay)
+		}
+	}
+
+	const debouncedHandleSave = useRef(
+		debounce(() => {
+			handleSave()
+		}, 1000)
+	).current
 
 	const getCaretPosition = () => {
 		let x = 0
@@ -60,7 +84,11 @@ export default function NewStory({ storyId, storyContent }: Props) {
 
 			const localImageUrl = URL.createObjectURL(file)
 			const ImageComponent = (
-				<ImageComp imageUrl={localImageUrl} file={file} handleSave={() => {}} />
+				<ImageComp
+					imageUrl={localImageUrl}
+					file={file}
+					handleSave={debouncedHandleSave}
+				/>
 			)
 
 			const wrapperDiv = document.createElement('div')
@@ -105,7 +133,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 	}
 
 	const insertCodeBlock = () => {
-		const CodeBlockComp = <CodeBlock handleSave={() => {}} />
+		const CodeBlockComp = <CodeBlock handleSave={debouncedHandleSave} />
 
 		setOpenTools(false)
 
@@ -121,9 +149,11 @@ export default function NewStory({ storyId, storyContent }: Props) {
 			const { x, y } = getCaretPosition()
 
 			setButtonPosition({ top: y, left: -50 })
+			debouncedHandleSave()
 		}
 
 		contentEditabeRef.current?.addEventListener('input', handleInput)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	useEffect(() => {
@@ -150,11 +180,33 @@ export default function NewStory({ storyId, storyContent }: Props) {
 		}
 	}, [])
 
+	useEffect(() => {
+		const fetchStoryById = async () => {
+			setLoading(true)
+
+			try {
+				const story = await getStoryById(storyId)
+				if (story.response) setStory(story.response)
+			} catch (error) {
+				console.log(error)
+			}
+			setLoading(false)
+		}
+
+		fetchStoryById()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	console.log(story)
+
 	return (
 		<main
 			id='container'
 			className='max-w-[800px] mx-auto relative font-mono mt-8'
 		>
+			<p className='absolute -top-[72px] opacity-30'>
+				{saving ? 'saving...' : 'saved'}
+			</p>
 			<div
 				id='editable'
 				ref={contentEditabeRef}
@@ -163,8 +215,17 @@ export default function NewStory({ storyId, storyContent }: Props) {
 				contentEditable
 				suppressContentEditableWarning
 			>
-				<h1 className='font-medium' data-h1-placeholder='New Story Title'></h1>
-				<p data-p-placeholder='Write your story ...'></p>
+				{storyContent ? (
+					<div dangerouslySetInnerHTML={{ __html: storyContent }}></div>
+				) : (
+					<div>
+						<h1
+							className='font-medium'
+							data-h1-placeholder='New Story Title'
+						></h1>
+						<p data-p-placeholder='Write your story ...'></p>
+					</div>
+				)}
 			</div>
 			<div
 				className={`z-10 ${buttonPosition.top === 0 ? 'hidden' : ''}`}
@@ -197,7 +258,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 						} ease-linear duration-100 bg-white cursor-pointer`}
 						onClick={insertImageComp}
 					>
-						<Image size={20} className='opacity-60 text-green-800 ' alt='' />
+						<Image size={20} className='opacity-60 text-green-800 ' />
 						<input
 							type='file'
 							style={{ display: 'none' }}

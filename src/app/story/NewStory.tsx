@@ -11,6 +11,7 @@ import 'medium-editor/dist/css/themes/default.css'
 import './new_story.css'
 import ImageComp from './ImageComp'
 import Divider from './Divider'
+import CodeBlock from './CodeBlock'
 
 type Props = {
 	storyId: string
@@ -101,6 +102,18 @@ export default function NewStory({ storyId, storyContent }: Props) {
 		root.render(DividerComp)
 		contentEditabeRef.current?.appendChild(wrapperDiv)
 		handleSave()
+	}
+
+	const insertCodeBlock = () => {
+		const CodeBlockComp = <CodeBlock handleSave={() => {}} />
+
+		setOpenTools(false)
+
+		const wrapperDiv = document.createElement('div')
+		const root = createRoot(wrapperDiv)
+
+		root.render(CodeBlockComp)
+		contentEditabeRef.current?.appendChild(wrapperDiv)
 	}
 
 	useEffect(() => {
@@ -205,6 +218,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 						className={`border-[1.5px] border-green-500 rounded-full block p-[6px] ${
 							openTools ? 'scale-100 visible' : 'scale-0 invisible'
 						} ease-linear duration-100 delay-100 bg-white cursor-pointer`}
+						onClick={insertCodeBlock}
 					>
 						<Code size={20} className='opacity-60 text-green-800 ' />
 					</span>

@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import { Code, Image, MoreHorizontal, Plus } from 'lucide-react'
+import axios from 'axios'
 import MediumEditor from 'medium-editor'
 import 'medium-editor/dist/css/medium-editor.css'
 import 'medium-editor/dist/css/themes/default.css'
 
 import './new_story.css'
+import { ImageComp } from './ImageComp'
 
 type Props = {
 	storyId: string
@@ -15,6 +18,7 @@ type Props = {
 
 export default function NewStory({ storyId, storyContent }: Props) {
 	const [openTools, setOpenTools] = useState<boolean>(false)
+	const [saving, setSaving] = useState<boolean>(false)
 	const [buttonPosition, setButtonPosition] = useState<{
 		top: number
 		left: number
@@ -42,6 +46,47 @@ export default function NewStory({ storyId, storyContent }: Props) {
 		}
 
 		return { x, y }
+	}
+
+	const handleSave = async () => {
+		const content = contentEditabeRef.current?.innerHTML
+		setSaving(true)
+
+		try {
+			await axios.patch('/api/new-story', {
+				storyId,
+				content,
+			})
+			console.log('saved')
+		} catch (error) {
+			console.log('Error in saving')
+		}
+		setSaving(false)
+	}
+
+	const insertImageComp = () => {
+		fileInputRef.current?.click()
+	}
+
+	const handleFileInputChange = (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = event.target.files?.[0]
+
+		if (file) {
+			setOpenTools(false)
+
+			const localImageUrl = URL.createObjectURL(file)
+			const ImageComponent = (
+				<ImageComp imageUrl={localImageUrl} file={file} handleSave={() => {}} />
+			)
+
+			const wrapperDiv = document.createElement('div')
+			const root = createRoot(wrapperDiv)
+			root.render(ImageComponent)
+
+			contentEditabeRef.current?.appendChild(wrapperDiv)
+		}
 	}
 
 	useEffect(() => {
@@ -123,6 +168,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 						className={`border-[1.5px] border-green-500 rounded-full block p-[6px] ${
 							openTools ? 'scale-100 visible' : 'scale-0 invisible'
 						} ease-linear duration-100 bg-white cursor-pointer`}
+						onClick={insertImageComp}
 					>
 						<Image size={20} className='opacity-60 text-green-800 ' alt='' />
 						<input
@@ -130,6 +176,7 @@ export default function NewStory({ storyId, storyContent }: Props) {
 							style={{ display: 'none' }}
 							accept='image/*'
 							ref={fileInputRef}
+							onChange={handleFileInputChange}
 						/>
 					</span>
 					<span

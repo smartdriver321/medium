@@ -11,3 +11,9 @@ export const getCurrentUser = async () => {
 
 	return JSON.parse(JSON.stringify(user))
 }
+
+export const getUser = async (userId: string) => {
+	if (!userId) throw new Error('No current user found')
+	const user = await clerkClient.users.getUser(userId)
+	return JSON.parse(JSON.stringify(user))
+}

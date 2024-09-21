@@ -3,7 +3,9 @@ import React from 'react'
 import { Story } from '@prisma/client'
 
 import 'highlight.js/styles/github.css'
+import { clapCount, clapCountByUser } from '@/actions/clap'
 import FollowComponent from './FollowComponent'
+import ClapComponent from './ClapComponent'
 
 type Props = {
 	authorFirstName: string | null
@@ -12,7 +14,7 @@ type Props = {
 	publishedStory: Story
 }
 
-export default function RenderStory({
+export default async function RenderStory({
 	authorFirstName,
 	authorImage,
 	authorLastName,
@@ -23,10 +25,11 @@ export default function RenderStory({
 	}
 
 	const h1match = publishedStory.content!.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)
-
 	const h1Element = h1match ? h1match[1] : ''
-
 	const h1elemntwithouttag = stripHtmlTags(h1Element)
+
+	const clapCounts = await clapCount(publishedStory.id)
+	const userClaps = await clapCountByUser(publishedStory.id)
 
 	return (
 		<div className='flex items-center justify-center mt-6 max-w-[800px] mx-auto'>
@@ -53,6 +56,15 @@ export default function RenderStory({
 								.slice(1, 4)
 								.join(' ')}
 						</p>
+					</div>
+				</div>
+				<div className='border-y-[1px] border-neutral-200 py-3 mt-6 flex items-center justify-between px-3'>
+					<div className='flex items-center space-x-4'>
+						<ClapComponent
+							storyId={publishedStory.id}
+							clapCount={clapCounts}
+							userClaps={userClaps}
+						/>
 					</div>
 				</div>
 			</div>
